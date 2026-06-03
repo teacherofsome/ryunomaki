@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>龍の巻 - 人材紹介管理システム</title>
+<style>
+  :root {
+    --primary: #4F46E5; --primary-dark: #3730A3; --primary-light: #EEF2FF;
+    --secondary: #06B6D4; --success: #10B981; --warning: #F59E0B; --danger: #EF4444;
+    --gray-50: #F9FAFB; --gray-100: #F3F4F6; --gray-200: #E5E7EB; --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF; --gray-500: #6B7280; --gray-600: #4B5563; --gray-700: #374151;
+    --gray-800: #1F2937; --gray-900: #111827; --sidebar-w: 240px; --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; background: var(--gray-50); color: var(--gray-800); }
+  #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%); }
+  .login-card { background: white; border-radius: 20px; padding: 48px 40px; width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.15); }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .logo-icon { width: 64px; height: 64px; background: linear-gradient(135deg, #4F46E5, #06B6D4); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 12px; }
+  .login-logo h1 { font-size: 26px; font-weight: 800; color: var(--gray-900); letter-spacing: 0.05em; }
+  .login-logo p { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; transition: border-color 0.2s; font-family: inherit; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-family: inherit; }
+  .btn-primary { background: var(--primary); color: white; } .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-secondary { background: var(--gray-100); color: var(--gray-700); } .btn-secondary:hover { background: var(--gray-200); }
+  .btn-success { background: var(--success); color: white; } .btn-danger { background: var(--danger); color: white; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; } .btn-full { width: 100%; justify-content: center; }
+  .login-hint { background: var(--gray-50); border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: var(--gray-500); }
+  .login-hint strong { color: var(--gray-700); }
+  #app { display: none; min-height: 100vh; }
+  .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--gray-900); display: flex; flex-direction: column; z-index: 100; }
+  .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; }
+  .sidebar-logo .logo-s { width: 36px; height: 36px; background: linear-gradient(135deg, #4F46E5, #06B6D4); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .sidebar-logo span { color: white; font-size: 15px; font-weight: 800; letter-spacing: 0.05em; }
+  .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-section { margin-bottom: 24px; }
+  .nav-section-title { font-size: 10px; font-weight: 700; color: var(--gray-500); letter-spacing: 0.1em; padding: 0 8px; margin-bottom: 6px; text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: var(--gray-400); font-size: 13px; font-weight: 500; transition: all 0.15s; margin-bottom: 2px; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: white; } .nav-item.active { background: var(--primary); color: white; }
+  .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge { margin-left: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+  .sidebar-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #06B6D4); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; }
+  .user-name { color: white; font-size: 13px; font-weight: 600; } .user-role { color: var(--gray-400); font-size: 11px; }
+  .logout-btn { margin-left: auto; color: var(--gray-500); cursor: pointer; font-size: 16px; } .logout-btn:hover { color: white; }
+  .main-content { margin-left: var(--sidebar-w); padding: 28px; min-height: 100vh; }
+  .page { display: none; } .page.active { display: block; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .topbar-title h2 { font-size: 22px; font-weight: 700; color: var(--gray-900); } .topbar-title p { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+  .card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; } .card-title { font-size: 14px; font-weight: 700; color: var(--gray-700); }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .stat-label { font-size: 12px; color: var(--gray-500); font-weight: 500; } .stat-value { font-size: 28px; font-weight: 800; color: var(--gray-900); margin: 6px 0 4px; } .stat-sub { font-size: 12px; color: var(--gray-400); } .stat-icon { font-size: 24px; margin-bottom: 10px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 12px; border-bottom: 1.5px solid var(--gray-200); background: var(--gray-50); text-align: left; }
+  td { padding: 12px 12px; border-bottom: 1px solid var(--gray-100); font-size: 13px; color: var(--gray-700); vertical-align: middle; }
+  tr:hover td { background: var(--gray-50); } tr:last-child td { border-bottom: none; }
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-blue { background: #DBEAFE; color: #1D4ED8; } .badge-green { background: #D1FAE5; color: #065F46; } .badge-yellow { background: #FEF3C7; color: #92400E; } .badge-red { background: #FEE2E2; color: #991B1B; } .badge-purple { background: #EDE9FE; color: #5B21B6; } .badge-gray { background: var(--gray-100); color: var(--gray-600); }
+  .progress-bar { height: 6px; background: var(--gray-100); border-radius: 3px; overflow: hidden; } .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 16px; padding: 32px; width: 620px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--gray-900); }
+  .modal-close { width: 32px; height: 32px; border-radius: 8px; background: var(--gray-100); border: none; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; } .modal-close:hover { background: var(--gray-200); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--gray-100); }
+
+  /* テンプレートグリッド — スクロール対応 */
+  .template-scroll-wrap { max-height: 220px; overflow-y: auto; padding-right: 4px; margin-bottom: 16px; }
+  .template-scroll-wrap::-webkit-scrollbar { width: 4px; }
+  .template-scroll-wrap::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 4px; }
+  .template-scroll-wrap::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+  .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .template-card { border: 2px solid var(--gray-200); border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; }
+  .template-card:hover, .template-card.selected { border-color: var(--primary); background: var(--primary-light); }
+  .template-card .t-icon { font-size: 20px; margin-bottom: 4px; } .template-card .t-name { font-size: 12px; font-weight: 700; color: var(--gray-800); } .template-card .t-desc { font-size: 10px; color: var(--gray-500); margin-top: 2px; line-height: 1.4; } .template-card .t-days { font-size: 10px; color: var(--primary); font-weight: 600; margin-top: 4px; }
+  /* 新着バッジ */
+  .template-card .t-new { display: inline-block; background: var(--danger); color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
+
+  .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .kanban-col { background: var(--gray-100); border-radius: var(--radius); padding: 16px; }
+  .kanban-col-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .kanban-col-title { font-size: 13px; font-weight: 700; color: var(--gray-700); }
+  .kanban-count { background: white; border-radius: 12px; padding: 2px 8px; font-size: 12px; font-weight: 700; color: var(--gray-600); }
+  .task-card { background: white; border-radius: 8px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+  .task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .task-card.priority-high { border-left-color: var(--danger); } .task-card.priority-mid { border-left-color: var(--warning); } .task-card.priority-low { border-left-color: var(--success); }
+  .task-card-title { font-size: 13px; font-weight: 600; color: var(--gray-800); margin-bottom: 8px; }
+  .task-card-meta { display: flex; align-items: center; justify-content: space-between; }
+  .task-assignee { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-500); }
+  .avatar-xs { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #06B6D4); display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 700; }
+  .task-due { font-size: 11px; } .task-due.overdue { color: var(--danger); font-weight: 600; } .task-due.soon { color: var(--warning); font-weight: 600; } .task-due.ok { color: var(--gray-400); }
+  .customer-row td { cursor: pointer; } .customer-row:hover td { background: var(--primary-light) !important; }
+  .notification { position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 12px; min-width: 300px; transform: translateX(120%); transition: transform 0.3s ease; border-left: 4px solid var(--success); }
+  .notification.show { transform: translateX(0); } .notification-icon { font-size: 20px; } .notification-text { font-size: 13px; color: var(--gray-700); font-weight: 500; }
+  .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-100); } .activity-item:last-child { border-bottom: none; }
+  .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; } .activity-text { font-size: 13px; color: var(--gray-700); } .activity-time { font-size: 11px; color: var(--gray-400); margin-top: 3px; }
+  .completion-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .completion-opt { border: 2px solid var(--gray-200); border-radius: 8px; padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
+  .completion-opt:hover, .completion-opt.selected { border-color: var(--success); background: #D1FAE5; }
+  .completion-opt .opt-icon { font-size: 24px; margin-bottom: 6px; } .completion-opt .opt-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--gray-200); background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--gray-600); transition: all 0.2s; font-family: inherit; }
+  .filter-btn.active { background: var(--primary); border-color: var(--primary); color: white; } .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .search-box { display: flex; align-items: center; gap: 8px; background: white; border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--gray-400); }
+  .search-box input { border: none; outline: none; background: transparent; font-family: inherit; font-size: 13px; width: 200px; }
+  .report-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+  .tag { display: inline-block; background: var(--primary-light); color: var(--primary); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin: 2px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  input[type="date"], input[type="text"], input[type="password"], input[type="email"] { font-family: inherit; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .page.active { animation: fadeIn 0.25s ease; }
+  @keyframes highlight { 0%,100% { background: white; } 50% { background: #FEF3C7; } }
+  .template-card.just-added { animation: highlight 1s ease; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🐉</div>
+      <h1>龍の巻</h1>
+      <p>人材紹介 マネジメントシステム</p>
+    </div>
+    <div class="login-hint">
+      <strong>デモアカウント</strong><br>
+      管理者: admin@tatsunomaki.jp / admin123<br>
+      担当者: tanaka@tatsunomaki.jp / pass123
+    </div>
+    <div class="form-group"><label>メールアドレス</label><input type="email" id="login-email" value="admin@tatsunomaki.jp"></div>
+    <div class="form-group"><label>パスワード</label><input type="password" id="login-pass" value="admin123"></div>
+    <div id="login-error" style="color:#EF4444;font-size:12px;margin-bottom:12px;display:none;">メールアドレスまたはパスワードが正しくありません</div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">ログイン</button>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification">
+  <span class="notification-icon" id="notif-icon">✅</span>
+  <span class="notification-text" id="notif-text"></span>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo"><div class="logo-s">🐉</div><span>龍の巻</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">メイン</div>
+        <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span> ダッシュボード</div>
+        <div class="nav-item" onclick="showPage('tasks',this)"><span class="nav-icon">✅</span> タスク管理<span class="nav-badge" id="task-badge">5</span></div>
+        <div class="nav-item" onclick="showPage('customers',this)"><span class="nav-icon">👥</span> 顧客管理</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">設定</div>
+        <div class="nav-item" onclick="showPage('templates',this)"><span class="nav-icon">📋</span> NAテンプレート</div>
+        <div class="nav-item" onclick="showPage('members',this)"><span class="nav-icon">🏢</span> メンバー管理</div>
+        <div class="nav-item" onclick="showPage('reports',this)"><span class="nav-icon">📈</span> レポート</div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar">田</div>
+        <div><div class="user-name" id="sidebar-name">田中 花子</div><div class="user-role" id="sidebar-role">管理者</div></div>
+        <span class="logout-btn" onclick="doLogout()" title="ログアウト">⏻</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div class="topbar-title"><h2>ダッシュボード</h2><p>おはようございます、田中さん ☀️  今日のタスクを確認しましょう</p></div>
+        <div class="topbar-actions"><button class="btn btn-primary" onclick="openModal('create-task-modal')">＋ タスク作成</button></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-label">進行中の求職者</div><div class="stat-value">24</div><div class="stat-sub">↑ 先月比 +3名</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">本日のタスク</div><div class="stat-value">8</div><div class="stat-sub"><span style="color:var(--danger)">3件期限切れ</span></div></div>
+        <div class="stat-card"><div class="stat-icon">🤝</div><div class="stat-label">今月の内定数</div><div class="stat-value">7</div><div class="stat-sub">目標: 10件 (70%)</div></div>
+        <div class="stat-card"><div class="stat-icon">💼</div><div class="stat-label">稼働中求人</div><div class="stat-value">18</div><div class="stat-sub">企業 12社</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">🔥 本日の優先タスク</span><button class="btn btn-sm btn-secondary" onclick="showPage('tasks',document.querySelectorAll('.nav-item')[1])">すべて表示</button></div>
+          <div id="dash-tasks"></div>
+        </div>
+        <div class="card"><div class="card-header"><span class="card-title">📣 チームアクティビティ</span></div><div id="activity-feed"></div></div>
+      </div>
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="card"><div class="card-header"><span class="card-title">📊 求職者パイプライン</span></div><div id="pipeline-bars"></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">👥 メンバー別タスク消化率</span></div><div id="member-stats"></div></div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="page" id="page-tasks">
+      <div class="topbar">
+        <div class="topbar-title"><h2>タスク管理</h2><p>チーム全体のNAタスクをKanban形式で管理</p></div>
+        <div class="topbar-actions">
+          <div class="search-box"><span>🔍</span><input type="text" placeholder="タスクを検索..." oninput="filterTasksSearch(this.value)"></div>
+          <button class="btn btn-primary" onclick="openModal('create-task-modal')">＋ タスク作成</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterTasks('all',this)">すべて</button>
+        <button class="filter-btn" onclick="filterTasks('tanaka',this)">田中 花子</button>
+        <button class="filter-btn" onclick="filterTasks('suzuki',this)">鈴木 一郎</button>
+        <button class="filter-btn" onclick="filterTasks('yamada',this)">山田 美咲</button>
+        <button class="filter-btn" onclick="filterTasks('overdue',this)" style="color:var(--danger);border-color:var(--danger);">⚠️ 期限切れ</button>
+      </div>
+      <div class="kanban" id="kanban-board"></div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="page" id="page-customers">
+      <div class="topbar">
+        <div class="topbar-title"><h2>顧客管理</h2><p>求職者情報をもとにNAを合意・タスク化</p></div>
+        <div class="topbar-actions">
+          <div class="search-box"><span>🔍</span><input type="text" placeholder="求職者名・企業名で検索..."></div>
+          <button class="btn btn-primary" onclick="openModal('add-customer-modal')">＋ 求職者追加</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterCustomers('all',this)">すべて</button>
+        <button class="filter-btn" onclick="filterCustomers('sourcing',this)">ソーシング</button>
+        <button class="filter-btn" onclick="filterCustomers('interview',this)">面接中</button>
+        <button class="filter-btn" onclick="filterCustomers('offer',this)">内定</button>
+        <button class="filter-btn" onclick="filterCustomers('joined',this)">入社済</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>求職者名</th><th>希望職種</th><th>フェーズ</th><th>担当</th><th>最終NA</th><th>次回NA期限</th><th>操作</th></tr></thead>
+        <tbody id="customers-table"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div class="page" id="page-templates">
+      <div class="topbar">
+        <div class="topbar-title"><h2>NAテンプレート</h2><p>フェーズ別のNAテンプレートを管理・カスタマイズ</p></div>
+        <div class="topbar-actions"><button class="btn btn-primary" onclick="openModal('add-template-modal')">＋ テンプレート追加</button></div>
+      </div>
+      <div id="template-list-page"></div>
+    </div>
+
+    <!-- MEMBERS -->
+    <div class="page" id="page-members">
+      <div class="topbar"><div class="topbar-title"><h2>メンバー管理</h2><p>チームメンバーとタスク負荷を確認</p></div></div>
+      <div class="grid-3" id="member-cards"></div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="topbar">
+        <div class="topbar-title"><h2>レポート</h2><p>チームのパフォーマンスを可視化</p></div>
+        <div class="topbar-actions"><select class="btn btn-secondary" style="padding:8px 14px;"><option>今月</option><option>先月</option><option>過去3ヶ月</option></select></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🤝</div><div class="stat-label">今月内定数</div><div class="stat-value">7</div><div class="stat-sub">目標 10件</div></div>
+        <div class="stat-card"><div class="stat-icon">📞</div><div class="stat-label">完了NA数</div><div class="stat-value">142</div><div class="stat-sub">↑ 先月比 +18</div></div>
+        <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-label">平均選考期間</div><div class="stat-value">23日</div><div class="stat-sub">前月 27日</div></div>
+        <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-label">タスク完了率</div><div class="stat-value">84%</div><div class="stat-sub">目標 90%</div></div>
+      </div>
+      <div class="report-grid">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">📅 月別 内定・入社推移</div>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding-top:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%"><div style="width:100%;background:var(--primary);opacity:0.7;border-radius:4px 4px 0 0;height:45%;margin-top:auto"></div><span style="font-size:10px;color:var(--gray-500)">1月</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%"><div style="width:100%;background:var(--primary);opacity:0.8;border-radius:4px 4px 0 0;height:70%;margin-top:auto"></div><span style="font-size:10px;color:var(--gray-500)">2月</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%"><div style="width:100%;background:var(--primary);border-radius:4px 4px 0 0;height:55%;margin-top:auto"></div><span style="font-size:10px;color:var(--gray-500)">3月</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%"><div style="width:100%;background:var(--primary);border-radius:4px 4px 0 0;height:95%;margin-top:auto"></div><span style="font-size:10px;color:var(--gray-500)">4月</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%"><div style="width:100%;background:var(--primary);border-radius:4px 4px 0 0;height:80%;margin-top:auto"></div><span style="font-size:10px;color:var(--gray-500)">5月</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%"><div style="width:100%;background:var(--secondary);border-radius:4px 4px 0 0;height:60%;margin-top:auto"></div><span style="font-size:10px;color:var(--secondary);font-weight:700">6月</span></div>
+          </div>
+        </div>
+        <div class="card"><div class="card-title" style="margin-bottom:16px;">👤 担当者別 完了タスク</div><div id="report-member-stats"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODALS -->
+
+<!-- タスク作成 -->
+<div class="modal-overlay" id="create-task-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">✅ タスク作成</span><button class="modal-close" onclick="closeModal('create-task-modal')">✕</button></div>
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:700;color:var(--gray-700);">📋 テンプレートから選択</div>
+        <span id="tmpl-count-badge" style="font-size:11px;color:var(--gray-400);"></span>
+      </div>
+      <div class="template-scroll-wrap">
+        <div class="template-grid" id="modal-templates"></div>
+      </div>
+    </div>
+    <div class="form-group"><label>タスクタイトル <span style="color:var(--danger)">*</span></label><input type="text" id="task-title" placeholder="例: 山田太郎さん 面接後フォローコール"></div>
+    <div class="two-col">
+      <div class="form-group"><label>求職者</label><select id="task-customer"><option value="">選択してください</option></select></div>
+      <div class="form-group"><label>担当者 <span style="color:var(--danger)">*</span></label><select id="task-assignee"><option value="tanaka">田中 花子</option><option value="suzuki">鈴木 一郎</option><option value="yamada">山田 美咲</option></select></div>
+    </div>
+    <div class="two-col">
+      <div class="form-group"><label>期限日 <span style="color:var(--danger)">*</span></label><input type="date" id="task-due"></div>
+      <div class="form-group"><label>優先度</label><select id="task-priority"><option value="high">🔴 高</option><option value="mid" selected>🟡 中</option><option value="low">🟢 低</option></select></div>
+    </div>
+    <div class="form-group"><label>NA内容・メモ</label><textarea id="task-memo" rows="3" placeholder="合意内容やアクション詳細を記入"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('create-task-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="createTask()">タスクを作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 完了報告 -->
+<div class="modal-overlay" id="complete-task-modal">
+  <div class="modal" style="width:480px;">
+    <div class="modal-header"><span class="modal-title">📝 完了報告</span><button class="modal-close" onclick="closeModal('complete-task-modal')">✕</button></div>
+    <div style="font-size:14px;color:var(--gray-600);margin-bottom:16px;" id="complete-task-name"></div>
+    <div class="completion-options">
+      <div class="completion-opt selected" onclick="selectCompletion(this,'done')"><div class="opt-icon">✅</div><div class="opt-label">完了</div></div>
+      <div class="completion-opt" onclick="selectCompletion(this,'no-contact')"><div class="opt-icon">📵</div><div class="opt-label">連絡取れず</div></div>
+      <div class="completion-opt" onclick="selectCompletion(this,'reschedule')"><div class="opt-icon">🔄</div><div class="opt-label">日程変更</div></div>
+      <div class="completion-opt" onclick="selectCompletion(this,'ng')"><div class="opt-icon">❌</div><div class="opt-label">NG / 辞退</div></div>
+    </div>
+    <div class="form-group"><label>報告コメント</label><textarea id="complete-comment" rows="3" placeholder="対話内容や次のアクションを記入"></textarea></div>
+    <div class="form-group"><label>次のNA（任意）</label><div class="two-col"><input type="text" id="next-na-title" placeholder="次のアクション"><input type="date" id="next-na-due"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('complete-task-modal')">キャンセル</button>
+      <button class="btn btn-success" onclick="submitCompletion()">報告を提出</button>
+    </div>
+  </div>
+</div>
+
+<!-- 顧客詳細 -->
+<div class="modal-overlay" id="customer-detail-modal">
+  <div class="modal" style="width:640px;">
+    <div class="modal-header"><span class="modal-title" id="detail-name"></span><button class="modal-close" onclick="closeModal('customer-detail-modal')">✕</button></div>
+    <div id="customer-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('customer-detail-modal')">閉じる</button>
+      <button class="btn btn-primary" onclick="createTaskFromCustomer()">＋ NAタスク作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- テンプレート追加 -->
+<div class="modal-overlay" id="add-template-modal">
+  <div class="modal" style="width:500px;">
+    <div class="modal-header"><span class="modal-title">📋 テンプレート追加</span><button class="modal-close" onclick="closeModal('add-template-modal')">✕</button></div>
+    <div class="form-group"><label>テンプレート名</label><input type="text" id="tmpl-name" placeholder="例: 内定後フォロー"></div>
+    <div class="two-col">
+      <div class="form-group"><label>カテゴリ</label><select id="tmpl-cat"><option>求職者フォロー</option><option>企業営業</option><option>マッチング</option><option>入社後フォロー</option></select></div>
+      <div class="form-group"><label>標準期限（日数）</label><input type="text" id="tmpl-days" placeholder="例: 3"></div>
+    </div>
+    <div class="form-group"><label>デフォルト説明文</label><textarea id="tmpl-desc" rows="3" placeholder="このテンプレートの標準アクション内容"></textarea></div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--primary-light);border-radius:8px;font-size:12px;color:var(--primary);">
+      💡 追加後、タスク作成のテンプレート一覧にリアルタイム反映されます
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('add-template-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="addTemplate()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 求職者追加 -->
+<div class="modal-overlay" id="add-customer-modal">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header"><span class="modal-title">👤 求職者追加</span><button class="modal-close" onclick="closeModal('add-customer-modal')">✕</button></div>
+    <div class="two-col">
+      <div class="form-group"><label>氏名 <span style="color:var(--danger)">*</span></label><input type="text" id="cust-name" placeholder="山田 太郎"></div>
+      <div class="form-group"><label>現職</label><input type="text" id="cust-company" placeholder="株式会社〇〇"></div>
+    </div>
+    <div class="two-col">
+      <div class="form-group"><label>希望職種</label><input type="text" id="cust-job" placeholder="エンジニア"></div>
+      <div class="form-group"><label>担当者</label><select id="cust-assignee"><option value="tanaka">田中 花子</option><option value="suzuki">鈴木 一郎</option><option value="yamada">山田 美咲</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('add-customer-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="addCustomer()">追加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const USERS = {
+  'admin@tatsunomaki.jp': { pass: 'admin123', name: '田中 花子', role: '管理者', id: 'tanaka' },
+  'tanaka@tatsunomaki.jp': { pass: 'pass123', name: '鈴木 一郎', role: '担当者', id: 'suzuki' }
+};
+const MEMBERS = [
+  { id: 'tanaka', name: '田中 花子', role: 'マネージャー', tasks: 12, done: 10 },
+  { id: 'suzuki', name: '鈴木 一郎', role: '担当者', tasks: 9, done: 7 },
+  { id: 'yamada', name: '山田 美咲', role: '担当者', tasks: 7, done: 5 }
+];
+
+// ★ テンプレート追加時にタスクモーダルへリアルタイム反映するため、
+//    グローバルな配列として管理し、追加のたびに renderModalTemplates() を呼ぶ
+let TEMPLATES = [
+  { id: 1, name: '面接設定フォロー', cat: '求職者フォロー', days: 1, icon: '📞', desc: '面接日程を求職者に確認・リマインド。前日に不安解消のフォローコールを実施', isNew: false },
+  { id: 2, name: '書類確認・フィードバック', cat: '求職者フォロー', days: 2, icon: '📄', desc: '応募書類の内容を確認し、改善点を求職者にフィードバックする', isNew: false },
+  { id: 3, name: '面接後フォローコール', cat: '求職者フォロー', days: 1, icon: '🗣️', desc: '面接当日〜翌日中に感触・懸念点をヒアリング。次のステップを合意する', isNew: false },
+  { id: 4, name: '選考結果連絡', cat: '求職者フォロー', days: 1, icon: '📨', desc: '企業から結果を受け取り次第、当日中に求職者へ連絡。次のアクションを確認', isNew: false },
+  { id: 5, name: '内定後条件すり合わせ', cat: '求職者フォロー', days: 3, icon: '🤝', desc: '年収・入社日・条件面を企業と求職者の間で調整・合意形成を行う', isNew: false },
+  { id: 6, name: '入社前不安ケア', cat: '求職者フォロー', days: 7, icon: '💬', desc: '入社1週間前にコールし、不安・懸念を傾聴。入社後をイメージしやすいサポートを行う', isNew: false },
+  { id: 7, name: 'ヒアリング設定', cat: '企業営業', days: 2, icon: '🏢', desc: '新規企業へのヒアリング面談を設定。採用課題・求人ニーズを把握する', isNew: false },
+  { id: 8, name: '推薦文作成・送付', cat: 'マッチング', days: 2, icon: '📝', desc: '求職者プロフィールと企業ニーズをもとに推薦文を作成し企業へ送付', isNew: false },
+];
+
+let CUSTOMERS = [
+  { id: 1, name: '山田 太郎', company: 'ABC商事', job: '営業職', phase: 'interview', assignee: 'tanaka', lastNA: '面接設定', nextDue: '2026-06-04', tags: ['転職意欲高', '年収重視'] },
+  { id: 2, name: '佐藤 美咲', company: 'XYZ製造', job: 'エンジニア', phase: 'offer', assignee: 'suzuki', lastNA: '内定後条件すり合わせ', nextDue: '2026-06-05', tags: ['リモート希望'] },
+  { id: 3, name: '田中 健太', company: 'DEF IT', job: 'プロジェクトマネージャー', phase: 'sourcing', assignee: 'yamada', lastNA: '初回面談', nextDue: '2026-06-10', tags: ['副業OK希望'] },
+  { id: 4, name: '鈴木 あい', company: 'GHI商事', job: 'マーケティング', phase: 'interview', assignee: 'tanaka', lastNA: '書類確認', nextDue: '2026-06-03', tags: ['転職意欲高', 'スタートアップ希望'] },
+  { id: 5, name: '高橋 博', company: 'JKL金融', job: 'ファイナンス', phase: 'joined', assignee: 'suzuki', lastNA: '入社確認', nextDue: '2026-07-03', tags: ['入社済'] },
+  { id: 6, name: '渡辺 直美', company: 'MNO医療', job: '医療事務', phase: 'sourcing', assignee: 'tanaka', lastNA: '書類送付待ち', nextDue: '2026-06-08', tags: [] },
+  { id: 7, name: '伊藤 拓也', company: 'PQR建設', job: '施工管理', phase: 'offer', assignee: 'yamada', lastNA: '内定承諾確認', nextDue: '2026-06-06', tags: ['年収重視'] },
+];
+
+let TASKS = [
+  { id: 1, title: '山田太郎さん 面接後フォローコール', customer: 1, assignee: 'tanaka', due: '2026-06-03', priority: 'high', status: 'todo', memo: '一次面接後。感触・懸念点をヒアリングして次のアクションを合意する' },
+  { id: 2, title: '佐藤美咲さん 内定条件すり合わせ', customer: 2, assignee: 'suzuki', due: '2026-06-05', priority: 'high', status: 'inprogress', memo: '年収と入社日について企業と調整中' },
+  { id: 3, title: '鈴木あいさん 書類フィードバック', customer: 4, assignee: 'tanaka', due: '2026-06-03', priority: 'mid', status: 'todo', memo: '職務経歴書のブラッシュアップ' },
+  { id: 4, title: '田中健太さん 希望条件ヒアリング', customer: 3, assignee: 'yamada', due: '2026-06-10', priority: 'low', status: 'todo', memo: '初回登録から2週間。意向度・条件の変化をヒアリング' },
+  { id: 5, title: '伊藤拓也さん 内定承諾確認', customer: 7, assignee: 'yamada', due: '2026-06-06', priority: 'high', status: 'inprogress', memo: '承諾書の受領。入社意向を最終確認する' },
+  { id: 6, title: '渡辺直美さん 書類提出リマインド', customer: 6, assignee: 'tanaka', due: '2026-06-02', priority: 'mid', status: 'todo', memo: '期日を過ぎているため再度連絡' },
+  { id: 7, title: 'ABC商事 求人票更新確認', customer: null, assignee: 'suzuki', due: '2026-06-08', priority: 'low', status: 'todo', memo: '求人条件が変わっている可能性あり' },
+  { id: 8, title: '山田太郎さん 二次面接設定', customer: 1, assignee: 'tanaka', due: '2026-06-07', priority: 'mid', status: 'done', memo: '一次通過。二次面接日程を調整' },
+];
+
+let nextId = { task: 9, customer: 8, template: 9 };
+let currentUser = null, selectedTemplateId = null, completingTaskId = null, completionStatus = 'done', selectedCustomerId = null;
+let latestTemplateId = null; // 最新追加テンプレートのID（ハイライト用）
+
+const ACTIVITIES = [
+  { text: '佐藤美咲さんが内定承諾しました 🎉', time: '10分前', color: 'var(--success)' },
+  { text: '山田美咲が「田中健太さん ヒアリング」を完了', time: '45分前', color: 'var(--primary)' },
+  { text: '鈴木一郎が新しいタスクを3件作成', time: '1時間前', color: 'var(--secondary)' },
+  { text: '伊藤拓也さん 内定承諾書を受領', time: '2時間前', color: 'var(--warning)' },
+  { text: 'ABC商事からフィードバックを受信', time: '昨日', color: 'var(--gray-400)' },
+];
+
+// ===== AUTH =====
+function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  const user = USERS[email];
+  if (user && user.pass === pass) {
+    currentUser = { ...user, email };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('sidebar-name').textContent = user.name;
+    document.getElementById('sidebar-role').textContent = user.role;
+    document.getElementById('sidebar-avatar').textContent = user.name[0];
+    initApp();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+function doLogout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  currentUser = null;
+}
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+// ===== NAV =====
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  if (id === 'tasks') renderKanban();
+  if (id === 'customers') renderCustomers();
+  if (id === 'templates') renderTemplatesPage();
+  if (id === 'members') renderMembers();
+  if (id === 'reports') renderReports();
+}
+
+// ===== MODAL =====
+function openModal(id) {
+  if (id === 'create-task-modal') prepareTaskModal();
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); }); });
+
+// ===== NOTIFY =====
+function notify(msg, icon='✅', type='success') {
+  const n = document.getElementById('notification');
+  const colors = { success: 'var(--success)', warning: 'var(--warning)', error: 'var(--danger)', info: 'var(--primary)' };
+  n.style.borderLeftColor = colors[type] || colors.success;
+  document.getElementById('notif-icon').textContent = icon;
+  document.getElementById('notif-text').textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 3000);
+}
+
+// ===== INIT =====
+function initApp() { renderDashboard(); populateCustomerSelect(); }
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const today = todayStr();
+  document.getElementById('dash-tasks').innerHTML = TASKS.filter(t => t.status !== 'done').slice(0, 5).map(t => {
+    const cust = t.customer ? CUSTOMERS.find(c=>c.id===t.customer) : null;
+    const isOverdue = t.due < today;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${t.priority==='high'?'var(--danger)':t.priority==='mid'?'var(--warning)':'var(--success)'}"></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${t.title}</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px">${cust?cust.name:'—'} · ${memberName(t.assignee)}</div></div>
+      <div style="font-size:11px;${isOverdue?'color:var(--danger);font-weight:700':'color:var(--gray-400)'}">${isOverdue?'⚠️ 期限切れ':t.due}</div>
+      <button class="btn btn-sm btn-success" onclick="openCompleteModal(${t.id})">完了</button>
+    </div>`;
+  }).join('');
+  document.getElementById('activity-feed').innerHTML = ACTIVITIES.map(a => `
+    <div class="activity-item"><div class="activity-dot" style="background:${a.color}"></div><div><div class="activity-text">${a.text}</div><div class="activity-time">${a.time}</div></div></div>`).join('');
+  const phases = [
+    {label:'ソーシング',key:'sourcing',color:'var(--gray-400)'},
+    {label:'応募・書類',key:'applied',color:'var(--secondary)'},
+    {label:'面接中',key:'interview',color:'var(--primary)'},
+    {label:'内定',key:'offer',color:'var(--warning)'},
+    {label:'入社済',key:'joined',color:'var(--success)'},
+  ];
+  const counts = {sourcing:2,applied:4,interview:8,offer:5,joined:5};
+  const max = Math.max(...Object.values(counts));
+  document.getElementById('pipeline-bars').innerHTML = phases.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:80px;font-size:12px;color:var(--gray-600);text-align:right">${p.label}</div>
+      <div style="flex:1"><div class="progress-bar"><div class="progress-fill" style="width:${(counts[p.key]||0)/max*100}%;background:${p.color}"></div></div></div>
+      <div style="width:24px;font-size:12px;font-weight:700;color:var(--gray-700)">${counts[p.key]||0}</div>
+    </div>`).join('');
+  document.getElementById('member-stats').innerHTML = MEMBERS.map(m => `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div class="user-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0">${m.name[0]}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;font-weight:600">${m.name}</span><span style="font-size:12px;color:var(--gray-500)">${m.done}/${m.tasks}件</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${m.done/m.tasks*100}%;background:var(--primary)"></div></div>
+      </div>
+    </div>`).join('');
+}
+
+// ===== KANBAN =====
+const STATUSES = [
+  {key:'todo',label:'📋 未着手'},{key:'inprogress',label:'🔄 進行中'},
+  {key:'review',label:'👀 確認待ち'},{key:'done',label:'✅ 完了'},
+];
+let taskFilter = 'all';
+function renderKanban(filter) {
+  if (filter !== undefined) taskFilter = filter;
+  const today = todayStr();
+  let tasks = TASKS;
+  if (taskFilter !== 'all') {
+    if (taskFilter === 'overdue') tasks = tasks.filter(t => t.due < today && t.status !== 'done');
+    else tasks = tasks.filter(t => t.assignee === taskFilter);
+  }
+  document.getElementById('kanban-board').innerHTML = STATUSES.map(s => {
+    const cols = tasks.filter(t => t.status === s.key);
+    return `<div class="kanban-col">
+      <div class="kanban-col-header"><span class="kanban-col-title">${s.label}</span><span class="kanban-count">${cols.length}</span></div>
+      <div>${cols.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--gray-400)"><div style="font-size:28px">🗂️</div><div style="font-size:12px;margin-top:6px">タスクなし</div></div>' :
+      cols.map(t => {
+        const cust = t.customer ? CUSTOMERS.find(c=>c.id===t.customer) : null;
+        const isOverdue = t.due < today && t.status !== 'done';
+        const isSoon = t.due === today && t.status !== 'done';
+        return `<div class="task-card priority-${t.priority}" onclick="openCompleteModal(${t.id})">
+          <div class="task-card-title">${t.title}</div>
+          ${cust ? `<div style="font-size:11px;color:var(--gray-400);margin-bottom:8px">👤 ${cust.name}</div>` : ''}
+          <div class="task-card-meta">
+            <div class="task-assignee"><div class="avatar-xs">${memberName(t.assignee)[0]}</div>${memberName(t.assignee)}</div>
+            <div class="task-due ${isOverdue?'overdue':isSoon?'soon':'ok'}">${isOverdue?'⚠️':isSoon?'🔔':'📅'} ${t.due}</div>
+          </div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+}
+function filterTasks(f, el) {
+  document.querySelectorAll('#page-tasks .filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); renderKanban(f);
+}
+function filterTasksSearch(q) {
+  if (!q) { renderKanban(); return; }
+  const filtered = TASKS.filter(t => t.title.includes(q));
+  document.getElementById('kanban-board').innerHTML = STATUSES.map(s => {
+    const cols = filtered.filter(t => t.status === s.key);
+    return `<div class="kanban-col"><div class="kanban-col-header"><span class="kanban-col-title">${s.label}</span><span class="kanban-count">${cols.length}</span></div><div>
+    ${cols.map(t=>`<div class="task-card priority-${t.priority}" onclick="openCompleteModal(${t.id})"><div class="task-card-title">${t.title}</div><div class="task-card-meta"><div class="task-assignee"><div class="avatar-xs">${memberName(t.assignee)[0]}</div>${memberName(t.assignee)}</div><div class="task-due ok">📅 ${t.due}</div></div></div>`).join('')}
+    </div></div>`;
+  }).join('');
+}
+
+// ===== 完了報告 =====
+function openCompleteModal(taskId) {
+  completingTaskId = taskId;
+  const task = TASKS.find(t => t.id === taskId);
+  document.getElementById('complete-task-name').textContent = '「' + task.title + '」の完了報告';
+  document.querySelectorAll('.completion-opt').forEach(o => o.classList.remove('selected'));
+  document.querySelector('.completion-opt').classList.add('selected');
+  completionStatus = 'done';
+  document.getElementById('complete-comment').value = '';
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  document.getElementById('next-na-due').value = tomorrow.toISOString().split('T')[0];
+  openModal('complete-task-modal');
+}
+function selectCompletion(el, status) {
+  document.querySelectorAll('.completion-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected'); completionStatus = status;
+}
+function submitCompletion() {
+  const task = TASKS.find(t => t.id === completingTaskId);
+  task.status = 'done';
+  const nextTitle = document.getElementById('next-na-title').value;
+  const nextDue = document.getElementById('next-na-due').value;
+  if (nextTitle && nextDue) {
+    TASKS.push({ id: nextId.task++, title: nextTitle, customer: task.customer, assignee: task.assignee, due: nextDue, priority: 'mid', status: 'todo', memo: '' });
+    document.getElementById('task-badge').textContent = TASKS.filter(t=>t.status!=='done').length;
+  }
+  ACTIVITIES.unshift({ text: `${memberName(task.assignee)}が「${task.title}」を完了報告`, time: 'たった今', color: 'var(--success)' });
+  closeModal('complete-task-modal');
+  renderKanban(); renderDashboard();
+  notify('完了報告を受け付けました ✅', '✅', 'success');
+}
+
+// ===== タスク作成モーダル =====
+function prepareTaskModal() {
+  const today = new Date(); today.setDate(today.getDate()+1);
+  document.getElementById('task-due').value = today.toISOString().split('T')[0];
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-memo').value = '';
+  selectedTemplateId = null;
+  renderModalTemplates();
+  populateCustomerSelect();
+}
+
+// ★ リアルタイム反映の核心：TEMPLATES 全件を毎回描画し、件数バッジも更新
+function renderModalTemplates(highlightId) {
+  const grid = document.getElementById('modal-templates');
+  if (!grid) return;
+  grid.innerHTML = TEMPLATES.map(t => `
+    <div class="template-card ${selectedTemplateId===t.id?'selected':''} ${highlightId===t.id?'just-added':''}"
+         id="tmpl-card-${t.id}" onclick="selectTemplate(${t.id})">
+      <div class="t-icon">${t.icon}</div>
+      <div class="t-name">${t.name}${t.isNew?'<span class="t-new">NEW</span>':''}</div>
+      <div class="t-desc">${t.desc.slice(0,32)}…</div>
+      <div class="t-days">📅 ${t.days}日以内</div>
+    </div>`).join('');
+  // 件数バッジ更新
+  const badge = document.getElementById('tmpl-count-badge');
+  if (badge) badge.textContent = `全${TEMPLATES.length}件`;
+  // ハイライトされたカードまでスクロール
+  if (highlightId) {
+    setTimeout(() => {
+      const el = document.getElementById('tmpl-card-' + highlightId);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }
+}
+
+function selectTemplate(id) {
+  selectedTemplateId = id;
+  const t = TEMPLATES.find(t=>t.id===id);
+  document.getElementById('task-title').value = t.name;
+  document.getElementById('task-memo').value = t.desc;
+  const due = new Date(); due.setDate(due.getDate()+t.days);
+  document.getElementById('task-due').value = due.toISOString().split('T')[0];
+  renderModalTemplates();
+}
+
+function populateCustomerSelect() {
+  const sel = document.getElementById('task-customer');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">選択してください</option>' + CUSTOMERS.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function createTask() {
+  const title = document.getElementById('task-title').value.trim();
+  const due = document.getElementById('task-due').value;
+  if (!title || !due) { notify('タイトルと期限を入力してください', '⚠️', 'warning'); return; }
+  const custId = parseInt(document.getElementById('task-customer').value) || null;
+  const assignee = document.getElementById('task-assignee').value;
+  const priority = document.getElementById('task-priority').value;
+  const memo = document.getElementById('task-memo').value;
+  TASKS.push({ id: nextId.task++, title, customer: custId, assignee, due, priority, status: 'todo', memo });
+  document.getElementById('task-badge').textContent = TASKS.filter(t=>t.status!=='done').length;
+  ACTIVITIES.unshift({ text: `${memberName(assignee)}に「${title}」を割り当てました`, time: 'たった今', color: 'var(--primary)' });
+  closeModal('create-task-modal');
+  renderKanban(); renderDashboard();
+  notify(`「${title}」を作成しました`, '✅', 'success');
+}
+
+// ===== 顧客管理 =====
+const PHASE_LABELS = {sourcing:'ソーシング',applied:'応募中',interview:'面接中',offer:'内定',joined:'入社済'};
+const PHASE_COLORS = {sourcing:'badge-gray',applied:'badge-blue',interview:'badge-purple',offer:'badge-yellow',joined:'badge-green'};
+let customerFilter = 'all';
+function filterCustomers(f, el) {
+  document.querySelectorAll('#page-customers .filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); customerFilter = f; renderCustomers();
+}
+function renderCustomers() {
+  const list = customerFilter === 'all' ? CUSTOMERS : CUSTOMERS.filter(c=>c.phase===customerFilter);
+  const today = todayStr();
+  document.getElementById('customers-table').innerHTML = list.map(c => {
+    const isOverdue = c.nextDue < today;
+    return `<tr class="customer-row" onclick="openCustomerDetail(${c.id})">
+      <td><strong>${c.name}</strong><div style="font-size:11px;color:var(--gray-400)">${c.company}</div></td>
+      <td>${c.job}</td>
+      <td><span class="badge ${PHASE_COLORS[c.phase]||'badge-gray'}">${PHASE_LABELS[c.phase]||c.phase}</span></td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="avatar-xs">${memberName(c.assignee)[0]}</div>${memberName(c.assignee)}</div></td>
+      <td><span style="font-size:12px">${c.lastNA}</span></td>
+      <td><span style="${isOverdue?'color:var(--danger);font-weight:700;':''}font-size:12px">${isOverdue?'⚠️ ':''} ${c.nextDue}</span></td>
+      <td><button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openTaskFromCustomer(${c.id})">＋ NA作成</button></td>
+    </tr>`;
+  }).join('');
+}
+function openCustomerDetail(id) {
+  selectedCustomerId = id;
+  const c = CUSTOMERS.find(c=>c.id===id);
+  document.getElementById('detail-name').textContent = `👤 ${c.name}（${c.company}）`;
+  const tasks = TASKS.filter(t=>t.customer===id);
+  document.getElementById('customer-detail-body').innerHTML = `
+    <div class="grid-2" style="margin-bottom:20px;">
+      <div><div style="font-size:11px;color:var(--gray-400)">希望職種</div><div style="font-weight:600;margin-top:3px">${c.job}</div></div>
+      <div><div style="font-size:11px;color:var(--gray-400)">フェーズ</div><div style="margin-top:3px"><span class="badge ${PHASE_COLORS[c.phase]||'badge-gray'}">${PHASE_LABELS[c.phase]||c.phase}</span></div></div>
+      <div><div style="font-size:11px;color:var(--gray-400)">担当者</div><div style="font-weight:600;margin-top:3px">${memberName(c.assignee)}</div></div>
+      <div><div style="font-size:11px;color:var(--gray-400)">次回NA期限</div><div style="font-weight:600;margin-top:3px">${c.nextDue}</div></div>
+    </div>
+    ${c.tags.length ? `<div style="margin-bottom:16px">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>` : ''}
+    <div style="font-weight:700;font-size:13px;color:var(--gray-700);margin-bottom:10px">📋 タスク履歴 (${tasks.length}件)</div>
+    ${tasks.length === 0 ? '<div style="color:var(--gray-400);font-size:13px">タスクなし</div>' :
+      tasks.map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100)">
+        <span class="badge ${t.status==='done'?'badge-green':t.status==='inprogress'?'badge-blue':'badge-gray'}">${t.status==='done'?'完了':t.status==='inprogress'?'進行中':'未着手'}</span>
+        <span style="font-size:13px;flex:1">${t.title}</span>
+        <span style="font-size:11px;color:var(--gray-400)">${t.due}</span>
+      </div>`).join('')}`;
+  openModal('customer-detail-modal');
+}
+function openTaskFromCustomer(custId) {
+  selectedCustomerId = custId;
+  openModal('create-task-modal');
+  setTimeout(() => { document.getElementById('task-customer').value = custId; }, 100);
+}
+function createTaskFromCustomer() { closeModal('customer-detail-modal'); openTaskFromCustomer(selectedCustomerId); }
+function addCustomer() {
+  const name = document.getElementById('cust-name').value.trim();
+  if (!name) { notify('氏名を入力してください', '⚠️', 'warning'); return; }
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+3);
+  CUSTOMERS.push({ id: nextId.customer++, name, company: document.getElementById('cust-company').value || '—', job: document.getElementById('cust-job').value || '—', phase: 'sourcing', assignee: document.getElementById('cust-assignee').value, lastNA: '登録', nextDue: tomorrow.toISOString().split('T')[0], tags: [] });
+  closeModal('add-customer-modal');
+  renderCustomers(); populateCustomerSelect();
+  notify(`${name}さんを追加しました`, '👤', 'success');
+}
+
+// ===== テンプレート =====
+function renderTemplatesPage() {
+  const cats = [...new Set(TEMPLATES.map(t=>t.cat))];
+  document.getElementById('template-list-page').innerHTML = cats.map(cat => {
+    const ts = TEMPLATES.filter(t=>t.cat===cat);
+    return `<div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><span class="card-title">📁 ${cat}</span><span style="font-size:12px;color:var(--gray-400)">${ts.length}件</span></div>
+      <div class="grid-3">${ts.map(t=>`<div style="border:1.5px solid ${t.isNew?'var(--primary)':'var(--gray-200)'};border-radius:10px;padding:14px;${t.isNew?'background:var(--primary-light)':''}">
+        <div style="font-size:22px;margin-bottom:6px">${t.icon}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--gray-800);margin-bottom:4px">${t.name}${t.isNew?'<span style="background:var(--danger);color:white;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:4px;">NEW</span>':''}</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:8px">${t.desc}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:11px;color:var(--primary);font-weight:600">📅 ${t.days}日以内</span>
+          <button class="btn btn-sm btn-primary" onclick="useTemplate(${t.id})">使用</button>
+        </div>
+      </div>`).join('')}
+      <div style="border:2px dashed var(--gray-200);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray-400);" onclick="openModal('add-template-modal')">
+        <div style="text-align:center"><div style="font-size:24px">＋</div><div style="font-size:12px;margin-top:4px">テンプレート追加</div></div>
+      </div></div>
+    </div>`;
+  }).join('');
+}
+
+function useTemplate(id) { selectTemplate(id); openModal('create-task-modal'); }
+
+// ★ addTemplate: 追加後にタスク作成モーダルのグリッドをリアルタイム更新
+function addTemplate() {
+  const name = document.getElementById('tmpl-name').value.trim();
+  if (!name) { notify('テンプレート名を入力してください', '⚠️', 'warning'); return; }
+  const newId = nextId.template++;
+  const newTmpl = {
+    id: newId,
+    name,
+    icon: '📋',
+    cat: document.getElementById('tmpl-cat').value,
+    days: parseInt(document.getElementById('tmpl-days').value) || 3,
+    desc: document.getElementById('tmpl-desc').value || 'カスタムテンプレート',
+    isNew: true,
+  };
+  TEMPLATES.push(newTmpl);
+  latestTemplateId = newId;
+
+  // ① テンプレートページを再描画
+  renderTemplatesPage();
+
+  // ② タスク作成モーダルが開いていれば即時反映 + ハイライト
+  const taskModal = document.getElementById('create-task-modal');
+  if (taskModal.classList.contains('open')) {
+    renderModalTemplates(newId);
+  } else {
+    // 開いていない場合も内部データは更新済み（次回openModal時に反映される）
+    renderModalTemplates(null);
+  }
+
+  closeModal('add-template-modal');
+
+  // フォームリセット
+  document.getElementById('tmpl-name').value = '';
+  document.getElementById('tmpl-days').value = '';
+  document.getElementById('tmpl-desc').value = '';
+
+  notify(`「${name}」をテンプレートに追加しました 📋`, '📋', 'success');
+
+  // 30秒後にNEWバッジを消す
+  setTimeout(() => {
+    const t = TEMPLATES.find(t=>t.id===newId);
+    if (t) { t.isNew = false; renderModalTemplates(); renderTemplatesPage(); }
+  }, 30000);
+}
+
+// ===== メンバー =====
+function renderMembers() {
+  document.getElementById('member-cards').innerHTML = MEMBERS.map(m => {
+    const myTasks = TASKS.filter(t=>t.assignee===m.id && t.status!=='done');
+    const done = TASKS.filter(t=>t.assignee===m.id && t.status==='done').length;
+    const total = TASKS.filter(t=>t.assignee===m.id).length;
+    return `<div class="card">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div class="user-avatar" style="width:60px;height:60px;font-size:22px;margin:0 auto 10px">${m.name[0]}</div>
+        <div style="font-size:16px;font-weight:700">${m.name}</div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${m.role}</div>
+      </div>
+      <div style="display:flex;justify-content:space-around;margin-bottom:16px;">
+        <div style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--primary)">${myTasks.length}</div><div style="font-size:11px;color:var(--gray-400)">進行中</div></div>
+        <div style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--success)">${done}</div><div style="font-size:11px;color:var(--gray-400)">完了</div></div>
+        <div style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--gray-600)">${total}</div><div style="font-size:11px;color:var(--gray-400)">合計</div></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;color:var(--gray-500)"><span>完了率</span><span>${total?Math.round(done/total*100):0}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${total?done/total*100:0}%;background:var(--success)"></div></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--gray-600);margin-bottom:8px">直近のタスク</div>
+      ${myTasks.slice(0,3).map(t=>`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--gray-100);color:var(--gray-700)">${t.title}</div>`).join('')}
+      ${myTasks.length===0?'<div style="font-size:12px;color:var(--gray-400)">タスクなし</div>':''}
+    </div>`;
+  }).join('');
+}
+
+// ===== レポート =====
+function renderReports() {
+  document.getElementById('report-member-stats').innerHTML = MEMBERS.map(m => {
+    const done = TASKS.filter(t=>t.assignee===m.id && t.status==='done').length;
+    const total = TASKS.filter(t=>t.assignee===m.id).length;
+    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div class="user-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0">${m.name[0]}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;font-weight:600">${m.name}</span><span style="font-size:12px;color:var(--gray-500)">${total?Math.round(done/total*100):0}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${total?done/total*100:0}%;background:var(--primary)"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function memberName(id) { const m = MEMBERS.find(m=>m.id===id); return m ? m.name : id; }
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+</script>
+</body>
+</html>
